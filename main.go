@@ -68,7 +68,7 @@ func handshake(context *gin.Context) {
 
 	fmt.Println(clientPublicKey)
 
-	myPrivateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	myPrivateKey, err = rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate key"})
 		return
@@ -88,6 +88,23 @@ func handshake(context *gin.Context) {
 	context.JSON(http.StatusOK, HandshakeMessage{
 		PublicKey: string(publicKeyPEM),
 	})
+}
+
+func sendSignature() (*DigitalSignatureMessage, error) {
+	payload := []byte("hello, world")
+
+	hash := sha256.Sum256(payload)
+
+	signatureRaw, err := rsa.SignPSS(rand.Reader, myPrivateKey, crypto.SHA256, hash[:], nil)
+	if err != nil {
+		return nil, err
+	}
+
+	signature := base64.StdEncoding.EncodeToString(signatureRaw)
+	return &DigitalSignatureMessage{
+		Payload:   string(payload),
+		Signature: signature,
+	}, nil
 }
 
 func digitalSignature(context *gin.Context) {
@@ -117,7 +134,12 @@ func digitalSignature(context *gin.Context) {
 		return
 	}
 
-	context.JSON(http.StatusOK, gin.H{"messagge": "Signature valid"})
+	serverResponse, err := sendSignature()
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	context.JSON(http.StatusOK, serverResponse)
 }
 
 func main() {
