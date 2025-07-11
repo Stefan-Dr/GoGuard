@@ -4,6 +4,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"errors"
 )
 
 func GenerateAESKey() ([]byte, error) {
@@ -14,13 +15,16 @@ func GenerateAESKey() ([]byte, error) {
 	return key, err
 }
 
-func GenerateCypherBlock(key []byte) (cipher.Block, error) {
+func GenerateCipherBlock(key []byte) (cipher.Block, error) {
 	block, err := aes.NewCipher(key)
 
 	return block, err
 }
 
 func GenerateGCM(block cipher.Block) (cipher.AEAD, error) {
+	if block == nil {
+		return nil, errors.New("cipher block is nil")
+	}
 	gcm, err := cipher.NewGCM(block)
 
 	return gcm, err
