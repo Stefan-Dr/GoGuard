@@ -11,6 +11,11 @@ import (
 
 func (s *Server) HandleAESKey() gin.HandlerFunc {
 	return func(context *gin.Context) {
+		if s.ClientPublicKey == nil {
+			context.JSON(http.StatusBadRequest, gin.H{"Error": "Server doesn't have your public key yet"})
+			return
+		}
+
 		var err error
 		s.Key, err = crypto.GenerateAESKey()
 		if err != nil {
@@ -29,5 +34,13 @@ func (s *Server) HandleAESKey() gin.HandlerFunc {
 			context.JSON(http.StatusInternalServerError, gin.H{"Error": err.Error()})
 			return
 		}
+
+		encryptedKey, err := crypto.Encrypt(s.Key, s.ClientPublicKey)
+		if err != nil {
+			context.JSON(http.StatusInternalServerError, gin.H{"Error": err.Error()})
+			return
+		}
+
+		context.JSON(http.StatusOK, gin.H{"key": encryptedKey})
 	}
 }

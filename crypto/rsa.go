@@ -82,3 +82,12 @@ func SendSignature(privKey *rsa.PrivateKey) (*models.DigitalSignatureMessage, er
 		Signature: signature,
 	}, nil
 }
+
+func Encrypt(data []byte, pubKey *rsa.PublicKey) (string, error) {
+	encryptedKey, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, pubKey, data, nil)
+	if err != nil {
+		return "", err
+	}
+
+	return base64.StdEncoding.EncodeToString(encryptedKey), nil
+}
