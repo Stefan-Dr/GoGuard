@@ -23,7 +23,7 @@ func (s *Server) HandleAESKey() gin.HandlerFunc {
 			return
 		}
 
-		s.CipherBlock, err = crypto.GenerateCypherBlock(s.Key)
+		s.CipherBlock, err = crypto.GenerateCipherBlock(s.Key)
 		if err != nil {
 			context.JSON(http.StatusInternalServerError, gin.H{"Error": err.Error()})
 			return
