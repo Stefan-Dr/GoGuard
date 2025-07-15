@@ -5,7 +5,10 @@ import (
 )
 
 func main() {
+	var cfg server.Config
+	cfg.LoadConfig()
+
 	srv := server.NewServer()
 	srv.RegisterRoutes()
-	srv.Start()
+	srv.Start(cfg.API.Address)
 }

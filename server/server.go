@@ -35,6 +35,6 @@ func (s *Server) RegisterRoutes() {
 	s.router.POST("/create-licence", s.HandleLicence())
 }
 
-func (s *Server) Start() {
-	s.router.Run("localhost:9090")
+func (s *Server) Start(addr string) {
+	s.router.Run(addr)
 }
