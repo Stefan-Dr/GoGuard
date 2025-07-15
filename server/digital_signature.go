@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (s *Server) DigitalSignature() gin.HandlerFunc {
+func (s *Server) HandleDigitalSignature() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		if s.ClientPublicKey == nil {
 			context.JSON(http.StatusBadRequest, gin.H{"error": "No Public Key visible for client"})

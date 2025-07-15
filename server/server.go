@@ -1,6 +1,7 @@
 package server
 
 import (
+	"crypto/cipher"
 	"crypto/rsa"
 	"net/http"
 
@@ -11,6 +12,9 @@ type Server struct {
 	router          *gin.Engine
 	ClientPublicKey *rsa.PublicKey
 	MyPrivateKey    *rsa.PrivateKey
+	Key             []byte
+	CipherBlock     cipher.Block
+	GCM             cipher.AEAD
 }
 
 func NewServer() *Server {
@@ -26,7 +30,9 @@ func (s *Server) RegisterRoutes() {
 		c.JSON(http.StatusOK, gin.H{"message": "pong"})
 	})
 	s.router.POST("/handshake", s.HandleHandshake())
-	s.router.POST("/digital-signature", s.DigitalSignature())
+	s.router.POST("/digital-signature", s.HandleDigitalSignature())
+	s.router.GET("/get-key", s.HandleAESKey())
+	s.router.POST("/create-licence", s.HandleLicence())
 }
 
 func (s *Server) Start() {

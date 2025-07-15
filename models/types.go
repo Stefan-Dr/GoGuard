@@ -8,3 +8,7 @@ type DigitalSignatureMessage struct {
 	Payload   string `json:"Payload"`
 	Signature string `json:"Signature"`
 }
+
+type LicenceMessage struct {
+	Uid string `json:"Uid"`
+}
