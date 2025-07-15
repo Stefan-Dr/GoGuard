@@ -32,6 +32,7 @@ func (s *Server) RegisterRoutes() {
 	s.router.POST("/handshake", s.HandleHandshake())
 	s.router.POST("/digital-signature", s.HandleDigitalSignature())
 	s.router.GET("/get-key", s.HandleAESKey())
+	s.router.POST("/create-licence", s.HandleLicence())
 }
 
 func (s *Server) Start() {
