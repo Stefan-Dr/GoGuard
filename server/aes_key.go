@@ -12,32 +12,32 @@ import (
 func (s *Server) HandleAESKey() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		if s.ClientPublicKey == nil {
-			context.JSON(http.StatusBadRequest, gin.H{"Error": "Server doesn't have your public key yet"})
+			context.JSON(http.StatusBadRequest, gin.H{"Error": "missing public keyt"})
 			return
 		}
 
 		var err error
 		s.Key, err = crypto.GenerateAESKey()
 		if err != nil {
-			context.JSON(http.StatusInternalServerError, gin.H{"Error": err.Error()})
+			context.JSON(http.StatusInternalServerError, gin.H{"Error": "internal server error"})
 			return
 		}
 
 		s.CipherBlock, err = crypto.GenerateCipherBlock(s.Key)
 		if err != nil {
-			context.JSON(http.StatusInternalServerError, gin.H{"Error": err.Error()})
+			context.JSON(http.StatusInternalServerError, gin.H{"Error": "internal server error"})
 			return
 		}
 
 		s.GCM, err = crypto.GenerateGCM(s.CipherBlock)
 		if err != nil {
-			context.JSON(http.StatusInternalServerError, gin.H{"Error": err.Error()})
+			context.JSON(http.StatusInternalServerError, gin.H{"Error": "internal server error"})
 			return
 		}
 
 		encryptedKey, err := crypto.Encrypt(s.Key, s.ClientPublicKey)
 		if err != nil {
-			context.JSON(http.StatusInternalServerError, gin.H{"Error": err.Error()})
+			context.JSON(http.StatusInternalServerError, gin.H{"Error": "internal server error"})
 			return
 		}
 

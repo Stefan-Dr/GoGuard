@@ -11,23 +11,23 @@ import (
 func (s *Server) HandleDigitalSignature() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		if s.ClientPublicKey == nil {
-			context.JSON(http.StatusBadRequest, gin.H{"error": "No Public Key visible for client"})
+			context.JSON(http.StatusBadRequest, gin.H{"error": "client public key is missing"})
 		}
 
 		var clientMessage models.DigitalSignatureMessage
 		if err := context.BindJSON(&clientMessage); err != nil {
-			context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
+			context.JSON(http.StatusBadRequest, gin.H{"error": "invalid JSON"})
 			return
 		}
 
 		if err := crypto.VerifySignature(clientMessage, s.ClientPublicKey); err != nil {
-			context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			context.JSON(http.StatusBadRequest, gin.H{"error": "invalid signature"})
 			return
 		}
 
 		serverResponse, err := crypto.SendSignature(s.MyPrivateKey)
 		if err != nil {
-			context.JSON(http.StatusInternalServerError, err.Error())
+			context.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		}
 
 		context.JSON(http.StatusOK, serverResponse)

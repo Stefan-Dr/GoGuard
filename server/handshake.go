@@ -19,18 +19,20 @@ func (s *Server) HandleHandshake() gin.HandlerFunc {
 		var err error
 		s.ClientPublicKey, err = crypto.ParseRSAPublicKeyFromPEM(msg.PublicKey)
 		if err != nil {
-			context.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
+			context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		s.MyPrivateKey, err = crypto.GeneratePrivateKey()
 		if err != nil {
-			context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			context.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+			return
 		}
 
 		publicKeyPEM, err := crypto.MakePublicKeyPEM(s.MyPrivateKey)
 		if err != nil {
-			context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			context.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+			return
 		}
 
 		context.JSON(http.StatusOK, models.HandshakeMessage{

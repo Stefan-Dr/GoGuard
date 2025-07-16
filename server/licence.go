@@ -22,7 +22,7 @@ func (s *Server) HandleLicence() gin.HandlerFunc {
 
 		uid, err := crypto.AESDecrypt(msg.Uid, s.GCM)
 		if err != nil {
-			context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			context.JSON(http.StatusBadRequest, gin.H{"error": "invalid UID"})
 			return
 		}
 
@@ -32,15 +32,13 @@ func (s *Server) HandleLicence() gin.HandlerFunc {
 		result, err := db.AddLicence(s.db, licenceString, uid)
 		if err != nil || result == 0 {
 			fmt.Println(err.Error())
-			context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			context.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 			return
 		}
 
 		licenceEncrypted, err := crypto.AESEncrypt(licence[:], s.CipherBlock, s.GCM)
 		if err != nil {
-			if err != nil {
-				context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			}
+			context.JSON(http.StatusBadRequest, gin.H{"error": "internal server error"})
 		}
 		context.JSON(http.StatusOK, gin.H{"licence": licenceEncrypted})
 	}
