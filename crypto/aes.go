@@ -33,6 +33,10 @@ func GenerateGCM(block cipher.Block) (cipher.AEAD, error) {
 
 func AESDecrypt(msg string, gcm cipher.AEAD) (string, error) {
 	ciphertext, err := base64.StdEncoding.DecodeString(msg)
+	if err != nil {
+		return "", err
+	}
+
 	nonceSize := gcm.NonceSize()
 	if len(ciphertext) < nonceSize {
 		return "", errors.New("encrypted message can't be shorter than nonce")

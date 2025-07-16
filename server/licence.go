@@ -1,10 +1,13 @@
 package server
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 
 	"github.com/Stefan-Dr/GoGuard/crypto"
+	"github.com/Stefan-Dr/GoGuard/db"
 	"github.com/Stefan-Dr/GoGuard/models"
 	"github.com/gin-gonic/gin"
 )
@@ -22,6 +25,14 @@ func (s *Server) HandleLicence() gin.HandlerFunc {
 			context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		}
 
-		fmt.Print(uid)
+		licence := sha256.Sum256([]byte(uid))
+		licenceString := base64.StdEncoding.EncodeToString(licence[:])
+
+		result, err := db.AddLicence(s.db, licenceString, uid)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		fmt.Println(result)
+
 	}
 }

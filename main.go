@@ -1,11 +1,23 @@
 package main
 
 import (
+	"fmt"
+
+	"github.com/Stefan-Dr/GoGuard/db"
 	"github.com/Stefan-Dr/GoGuard/server"
 )
 
 func main() {
-	srv := server.NewServer()
+	var cfg server.Config
+	cfg.LoadConfig()
+
+	db, err := db.ConnectDB(cfg.Database.Username, cfg.Database.Password, cfg.Database.ServerName, cfg.Database.Database)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	srv := server.NewServer(db)
 	srv.RegisterRoutes()
-	srv.Start()
+	srv.Start(cfg.API.Address)
 }
