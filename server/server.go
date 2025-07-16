@@ -3,6 +3,7 @@ package server
 import (
 	"crypto/cipher"
 	"crypto/rsa"
+	"database/sql"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -10,6 +11,7 @@ import (
 
 type Server struct {
 	router          *gin.Engine
+	db              *sql.DB
 	ClientPublicKey *rsa.PublicKey
 	MyPrivateKey    *rsa.PrivateKey
 	Key             []byte
@@ -17,9 +19,10 @@ type Server struct {
 	GCM             cipher.AEAD
 }
 
-func NewServer() *Server {
+func NewServer(database *sql.DB) *Server {
 	s := &Server{
 		router: gin.Default(),
+		db:     database,
 	}
 
 	return s
