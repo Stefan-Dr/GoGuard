@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"io"
 )
 
 func GenerateAESKey() ([]byte, error) {
@@ -49,5 +50,17 @@ func AESDecrypt(msg string, gcm cipher.AEAD) (string, error) {
 	}
 
 	return string(plaintext), nil
+}
 
+func AESEncrypt(licence []byte, block cipher.Block, gcm cipher.AEAD) (string, error) {
+	nonce := make([]byte, 12)
+	_, err := io.ReadFull(rand.Reader, nonce)
+	if err != nil {
+		return "", err
+	}
+
+	ciphertext := gcm.Seal(nonce, nonce, licence, nil)
+	text := base64.StdEncoding.EncodeToString(ciphertext)
+
+	return text, nil
 }
