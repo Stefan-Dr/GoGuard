@@ -34,6 +34,16 @@ func (s *Server) HandleLicence() gin.HandlerFunc {
 		}
 
 		if device.Uid.Valid {
+			uid, err := crypto.MakeUid(hwid, s.ServerKey)
+			if err != nil {
+				fmt.Println(err.Error())
+				context.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+				return
+			}
+			if device.Uid.String != uid {
+				fmt.Println("bad uid for hwid")
+				context.JSON(http.StatusInternalServerError, gin.H{"error": "access denied"})
+			}
 			licence, err := base64.StdEncoding.DecodeString(strings.TrimSpace(device.LicenceKey.String))
 			if err != nil {
 				fmt.Println(err.Error() + "; DecodeString for device.LicenceKey")
