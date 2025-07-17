@@ -17,12 +17,14 @@ type Server struct {
 	Key             []byte
 	CipherBlock     cipher.Block
 	GCM             cipher.AEAD
+	ServerKey       string
 }
 
-func NewServer(database *sql.DB) *Server {
+func NewServer(database *sql.DB, key string) *Server {
 	s := &Server{
-		router: gin.Default(),
-		db:     database,
+		router:    gin.Default(),
+		db:        database,
+		ServerKey: key,
 	}
 
 	return s
@@ -35,7 +37,7 @@ func (s *Server) RegisterRoutes() {
 	s.router.POST("/handshake", s.HandleHandshake())
 	s.router.POST("/digital-signature", s.HandleDigitalSignature())
 	s.router.GET("/get-key", s.HandleAESKey())
-	s.router.POST("/create-licence", s.HandleLicence())
+	s.router.POST("/licence", s.HandleLicence())
 }
 
 func (s *Server) Start(addr string) {

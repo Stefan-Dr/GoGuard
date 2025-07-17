@@ -17,7 +17,7 @@ func main() {
 		return
 	}
 
-	srv := server.NewServer(db)
+	srv := server.NewServer(db, cfg.ServerKey)
 	srv.RegisterRoutes()
 	srv.Start(cfg.API.Address)
 }

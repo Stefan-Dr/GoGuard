@@ -19,6 +19,8 @@ type Config struct {
 	API struct {
 		Address string `json:"address"`
 	} `json:"API"`
+
+	ServerKey string `json:"serverkey"`
 }
 
 func (c *Config) LoadConfig() {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Stefan-Dr/GoGuard/models"
 	_ "github.com/denisenkom/go-mssqldb"
 )
 
@@ -27,13 +28,14 @@ func ConnectDB(username string, password string, serverName string, database str
 	return db, nil
 }
 
-func AddLicence(db *sql.DB, licence string, uid string) (int64, error) {
+func AddLicence(db *sql.DB, hwid string, licence string, uid string) (int64, error) {
 	now := time.Now()
 
 	query := `
-        INSERT INTO dbo.Devices (Uid, LicenceKey, DateTime)
+        UPDATE dbo.Devices
+        SET Uid = @Uid, LicenceKey = @LicenceKey, DateTime = @DateTime
         OUTPUT INSERTED.Id
-        VALUES (@Uid, @LicenceKey, @DateTime);
+        WHERE Hwid = @Hwid;
     `
 	var id int64
 	err := db.QueryRow(
@@ -41,10 +43,28 @@ func AddLicence(db *sql.DB, licence string, uid string) (int64, error) {
 		sql.Named("Uid", uid),
 		sql.Named("LicenceKey", licence),
 		sql.Named("DateTime", now),
+		sql.Named("Hwid", hwid),
 	).Scan(&id)
 
 	if err != nil {
-		return 0, fmt.Errorf("AddLicence : %v", err)
+		fmt.Printf("AddLicence : %v", err)
+		return 0, err
 	}
 	return id, nil
+}
+
+func GetDeviceByHwid(db *sql.DB, hwid string) (*models.Device, error) {
+	query := `
+        SELECT Id, Hwid, Uid, LicenceKey, DateTime
+        FROM dbo.Devices
+        WHERE Hwid = @Hwid;
+    `
+	row := db.QueryRow(query, sql.Named("Hwid", hwid))
+	var device models.Device
+	err := row.Scan(&device.Id, &device.Hwid, &device.Uid, &device.LicenceKey, &device.DateTime)
+	if err != nil {
+		return nil, err
+	}
+
+	return &device, nil
 }

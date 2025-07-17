@@ -1,5 +1,7 @@
 package models
 
+import "database/sql"
+
 type HandshakeMessage struct {
 	PublicKey string `json:"publicKey"`
 }
@@ -9,6 +11,14 @@ type DigitalSignatureMessage struct {
 	Signature string `json:"Signature"`
 }
 
-type LicenceMessage struct {
-	Uid string `json:"Uid"`
+type LicenceRequestMessage struct {
+	Hwid string `json:"Hwid"`
+}
+
+type Device struct {
+	Id         int64
+	Hwid       string
+	Uid        sql.NullString
+	LicenceKey sql.NullString
+	DateTime   sql.NullTime
 }
