@@ -2,8 +2,8 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
+	"log"
 	"os"
 )
 
@@ -26,11 +26,11 @@ type Config struct {
 func (c *Config) LoadConfig() {
 	configFile, err := os.Open("config.json")
 	if err != nil {
-		fmt.Println(err)
+		log.Println("[ERROR] " + err.Error())
 	}
 
 	byteValue, _ := io.ReadAll(configFile)
 
 	json.Unmarshal(byteValue, &c)
-	fmt.Println("Config" + c.Database.Username + " " + "address" + c.API.Address)
+	log.Println("[INFO] Config loaded")
 }
