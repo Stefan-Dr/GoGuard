@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"io"
 )
 
@@ -35,17 +36,20 @@ func GenerateGCM(block cipher.Block) (cipher.AEAD, error) {
 func AESDecrypt(msg string, gcm cipher.AEAD) (string, error) {
 	ciphertext, err := base64.StdEncoding.DecodeString(msg)
 	if err != nil {
+		fmt.Println("decoding string failed")
 		return "", err
 	}
 
 	nonceSize := gcm.NonceSize()
 	if len(ciphertext) < nonceSize {
+		fmt.Println("encrypted message can't be shorter than nonce")
 		return "", errors.New("encrypted message can't be shorter than nonce")
 	}
 
 	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
+		fmt.Println("gcm.Open failed")
 		return "", err
 	}
 
