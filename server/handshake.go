@@ -1,8 +1,12 @@
 package server
 
 import (
+	"crypto/rand"
+	"encoding/base64"
+	"io"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/Stefan-Dr/GoGuard/crypto"
 	"github.com/Stefan-Dr/GoGuard/models"
@@ -20,31 +24,50 @@ func (s *Server) HandleHandshake() gin.HandlerFunc {
 			return
 		}
 
+		sessionId := make([]byte, 32)
+		_, erro := io.ReadFull(rand.Reader, sessionId)
+		if erro != nil {
+			log.Println("[ERROR] [" + ip + "] " + erro.Error())
+			context.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+			return
+		}
+		sessionIdString := base64.RawURLEncoding.EncodeToString(sessionId)
+
 		var err error
-		s.ClientPublicKey, err = crypto.ParseRSAPublicKeyFromPEM(msg.PublicKey)
+		session := &Session{}
+
+		session.ClientPublicKey, err = crypto.ParseRSAPublicKeyFromPEM(msg.PublicKey)
 		if err != nil {
 			log.Println("[ERROR] [" + ip + "] " + err.Error())
 			context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		s.MyPrivateKey, err = crypto.GeneratePrivateKey()
+		session.MyPrivateKey, err = crypto.GeneratePrivateKey()
 		if err != nil {
 			log.Println("[ERROR] [" + ip + "] " + err.Error())
 			context.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 			return
 		}
 
-		publicKeyPEM, err := crypto.MakePublicKeyPEM(s.MyPrivateKey)
+		publicKeyPEM, err := crypto.MakePublicKeyPEM(session.MyPrivateKey)
 		if err != nil {
 			log.Println("[ERROR] [" + ip + "] " + err.Error())
 			context.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 			return
 		}
 
-		context.JSON(http.StatusOK, models.HandshakeMessage{
-			PublicKey: string(publicKeyPEM),
+		session.ExpiresAt = time.Now().Add(5 * time.Second)
+
+		s.mutex.Lock()
+		s.sessions[sessionIdString] = session
+		s.mutex.Unlock()
+
+		context.JSON(http.StatusOK, gin.H{
+			"publicKey":  string(publicKeyPEM),
+			"Session-ID": sessionIdString,
 		})
-		log.Println("[INFO] [" + ip + "]  Sending server public key")
+
+		log.Println("[INFO] [" + ip + "]  Sending server public key and Session-ID")
 	}
 }

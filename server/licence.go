@@ -17,6 +17,28 @@ func (s *Server) HandleLicence() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		ip := context.ClientIP()
 		log.Println("[ROUTE] [" + ip + "] /licence")
+
+		sessionIdString := context.GetHeader("Session-ID")
+
+		s.mutex.RLock()
+		session, sessionExists := s.sessions[sessionIdString]
+		var expiredSession bool
+		if sessionExists {
+			expiredSession = s.sessions[sessionIdString].IsExpired()
+		}
+		s.mutex.RUnlock()
+
+		if !sessionExists || expiredSession {
+			log.Println("[ERROR] [" + ip + "] Invalid or expired session")
+			context.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired session"})
+			if expiredSession {
+				s.mutex.Lock()
+				delete(s.sessions, sessionIdString)
+				s.mutex.Unlock()
+			}
+			return
+		}
+
 		var msg models.LicenceRequestMessage
 		if err := context.BindJSON(&msg); err != nil {
 			log.Println("[ERROR] [" + ip + "] " + err.Error())
@@ -24,7 +46,7 @@ func (s *Server) HandleLicence() gin.HandlerFunc {
 			return
 		}
 
-		hwid, err := crypto.AESDecrypt(msg.Hwid, s.GCM)
+		hwid, err := crypto.AESDecrypt(msg.Hwid, session.GCM)
 		if err != nil {
 			log.Println("[ERROR] [" + ip + "] " + err.Error() + " hwid : " + hwid)
 			context.JSON(http.StatusBadRequest, gin.H{"error": "invalid Hwid"})
@@ -46,7 +68,7 @@ func (s *Server) HandleLicence() gin.HandlerFunc {
 				return
 			}
 			if device.Uid.String != uid {
-				log.Println("[ERROR] [" + ip + "] " + err.Error() + " hwid : " + hwid)
+				log.Println("[ERROR] [" + ip + "]  hwid : " + hwid)
 				context.JSON(http.StatusInternalServerError, gin.H{"error": "access denied"})
 			}
 			licence, err := base64.StdEncoding.DecodeString(strings.TrimSpace(device.LicenceKey.String))
@@ -56,7 +78,7 @@ func (s *Server) HandleLicence() gin.HandlerFunc {
 				return
 			}
 
-			licenceEncrypted, err := crypto.AESEncrypt(licence[:], s.CipherBlock, s.GCM)
+			licenceEncrypted, err := crypto.AESEncrypt(licence[:], session.CipherBlock, session.GCM)
 			if err != nil {
 				log.Println("[ERROR] [" + ip + "] " + err.Error() + " hwid : " + hwid)
 				context.JSON(http.StatusBadRequest, gin.H{"error": "internal server error"})
@@ -85,7 +107,7 @@ func (s *Server) HandleLicence() gin.HandlerFunc {
 			return
 		}
 
-		licenceEncrypted, err := crypto.AESEncrypt(licence[:], s.CipherBlock, s.GCM)
+		licenceEncrypted, err := crypto.AESEncrypt(licence[:], session.CipherBlock, session.GCM)
 		if err != nil {
 			log.Println("[ERROR] [" + ip + "] " + err.Error() + " hwid : " + hwid)
 			context.JSON(http.StatusBadRequest, gin.H{"error": "internal server error"})
@@ -93,5 +115,9 @@ func (s *Server) HandleLicence() gin.HandlerFunc {
 		}
 		context.JSON(http.StatusOK, gin.H{"licence": licenceEncrypted})
 		log.Println("[INFO] [" + ip + "] " + "Licence created and sent for device with hwid : " + hwid)
+
+		s.mutex.Lock()
+		delete(s.sessions, sessionIdString)
+		s.mutex.Unlock()
 	}
 }

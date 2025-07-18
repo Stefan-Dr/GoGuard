@@ -13,7 +13,28 @@ func (s *Server) HandleDigitalSignature() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		ip := context.ClientIP()
 		log.Println("[ROUTE] [" + ip + "] /digital-signature")
-		if s.ClientPublicKey == nil {
+
+		var sessionIdString = context.GetHeader("Session-ID")
+		s.mutex.RLock()
+		session, sessionExists := s.sessions[sessionIdString]
+		var expiredSession bool = false
+		if sessionExists {
+			expiredSession = s.sessions[sessionIdString].IsExpired()
+		}
+		s.mutex.RUnlock()
+
+		if !sessionExists || expiredSession {
+			log.Println("[ERROR] [" + ip + "] invalid or expired session")
+			context.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired session"})
+			if expiredSession {
+				s.mutex.Lock()
+				delete(s.sessions, sessionIdString)
+				s.mutex.Unlock()
+			}
+			return
+		}
+
+		if session.ClientPublicKey == nil {
 			log.Println("[ERROR] [" + ip + "] No public key found")
 			context.JSON(http.StatusBadRequest, gin.H{"error": "client public key is missing"})
 			return
@@ -26,13 +47,13 @@ func (s *Server) HandleDigitalSignature() gin.HandlerFunc {
 			return
 		}
 
-		if err := crypto.VerifySignature(clientMessage, s.ClientPublicKey); err != nil {
+		if err := crypto.VerifySignature(clientMessage, session.ClientPublicKey); err != nil {
 			log.Println("[ERROR] [" + ip + "] " + err.Error())
 			context.JSON(http.StatusBadRequest, gin.H{"error": "invalid signature"})
 			return
 		}
 
-		serverResponse, err := crypto.SendSignature(s.MyPrivateKey)
+		serverResponse, err := crypto.SendSignature(session.MyPrivateKey)
 		if err != nil {
 			log.Println("[ERROR] [" + ip + "] " + err.Error())
 			context.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
