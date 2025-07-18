@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/Stefan-Dr/GoGuard/crypto"
 	"github.com/Stefan-Dr/GoGuard/models"
@@ -55,6 +56,8 @@ func (s *Server) HandleHandshake() gin.HandlerFunc {
 			context.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 			return
 		}
+
+		session.ExpiresAt = time.Now().Add(5 * time.Second)
 
 		s.mutex.Lock()
 		s.sessions[sessionIdString] = session

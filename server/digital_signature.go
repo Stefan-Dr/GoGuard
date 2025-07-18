@@ -16,8 +16,23 @@ func (s *Server) HandleDigitalSignature() gin.HandlerFunc {
 
 		var sessionIdString = context.GetHeader("Session-ID")
 		s.mutex.RLock()
-		session := s.sessions[sessionIdString]
+		session, sessionExists := s.sessions[sessionIdString]
+		var expiredSession bool = false
+		if sessionExists {
+			expiredSession = s.sessions[sessionIdString].IsExpired()
+		}
 		s.mutex.RUnlock()
+
+		if !sessionExists || expiredSession {
+			log.Println("[ERROR] [" + ip + "] invalid or expired session")
+			context.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired session"})
+			if expiredSession {
+				s.mutex.Lock()
+				delete(s.sessions, sessionIdString)
+				s.mutex.Unlock()
+			}
+			return
+		}
 
 		if session.ClientPublicKey == nil {
 			log.Println("[ERROR] [" + ip + "] No public key found")

@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,6 +17,7 @@ type Session struct {
 	Key             []byte
 	CipherBlock     cipher.Block
 	GCM             cipher.AEAD
+	ExpiresAt       time.Time
 }
 
 type Server struct {
@@ -24,6 +26,10 @@ type Server struct {
 	sessions  map[string]*Session
 	mutex     sync.RWMutex
 	ServerKey string
+}
+
+func (s *Session) IsExpired() bool {
+	return time.Now().After(s.ExpiresAt)
 }
 
 func NewServer(database *sql.DB, key string) *Server {

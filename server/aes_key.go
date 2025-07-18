@@ -17,14 +17,23 @@ func (s *Server) HandleAESKey() gin.HandlerFunc {
 
 		var sessionIdString = context.GetHeader("Session-ID")
 		s.mutex.RLock()
-		if s.sessions[sessionIdString] == nil {
+		session, sessionExists := s.sessions[sessionIdString]
+		var expiredSession bool
+		if sessionExists {
+			expiredSession = s.sessions[sessionIdString].IsExpired()
+		}
+		s.mutex.RUnlock()
+
+		if !sessionExists || expiredSession {
 			log.Println("[ERROR] [" + ip + "] No session id in header")
 			context.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired session"})
-			s.mutex.RUnlock()
+			if expiredSession {
+				s.mutex.Lock()
+				delete(s.sessions, sessionIdString)
+				s.mutex.Unlock()
+			}
 			return
 		}
-		session := s.sessions[sessionIdString]
-		s.mutex.RUnlock()
 
 		if session.ClientPublicKey == nil {
 			log.Println("[ERROR] [" + ip + "] Missing public key")
