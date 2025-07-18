@@ -5,19 +5,25 @@ import (
 	"crypto/rsa"
 	"database/sql"
 	"net/http"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 )
 
-type Server struct {
-	router          *gin.Engine
-	db              *sql.DB
+type Session struct {
 	ClientPublicKey *rsa.PublicKey
 	MyPrivateKey    *rsa.PrivateKey
 	Key             []byte
 	CipherBlock     cipher.Block
 	GCM             cipher.AEAD
-	ServerKey       string
+}
+
+type Server struct {
+	router    *gin.Engine
+	db        *sql.DB
+	sessions  map[string]*Session
+	mutex     sync.RWMutex
+	ServerKey string
 }
 
 func NewServer(database *sql.DB, key string) *Server {
@@ -25,6 +31,7 @@ func NewServer(database *sql.DB, key string) *Server {
 		router:    gin.Default(),
 		db:        database,
 		ServerKey: key,
+		sessions:  make(map[string]*Session),
 	}
 
 	return s
