@@ -72,13 +72,26 @@ func VerifySignature(clientMessage models.DigitalSignatureMessage, pubKey *rsa.P
 	return err
 }
 
+func randomBase64String(n int) (string, error) {
+	bytes := make([]byte, n)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(bytes), nil
+}
+
 func MakeSignature(privKey *rsa.PrivateKey) (*models.DigitalSignatureMessage, error) {
 	if privKey == nil {
 		return nil, errors.New("can't make a signature with nil as private key")
 	}
-	payload := []byte("hello, world")
+	payload, err := randomBase64String(12)
+	if err != nil {
+		return nil, err
+	}
 
-	hash := sha256.Sum256(payload)
+	payloadBytes := []byte(payload)
+	hash := sha256.Sum256(payloadBytes)
 
 	signatureRaw, err := rsa.SignPSS(rand.Reader, privKey, crypto.SHA256, hash[:], nil)
 	if err != nil {
@@ -87,7 +100,7 @@ func MakeSignature(privKey *rsa.PrivateKey) (*models.DigitalSignatureMessage, er
 
 	signature := base64.StdEncoding.EncodeToString(signatureRaw)
 	return &models.DigitalSignatureMessage{
-		Payload:   string(payload),
+		Payload:   payload,
 		Signature: signature,
 	}, nil
 }
