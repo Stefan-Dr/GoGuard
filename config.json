@@ -1,0 +1,12 @@
+{
+    "database": {
+        "servername": "<---server-name--->",
+        "username" : "<---username--->",
+        "password" : "<---password--->",
+        "database" : "GoGuardDB",
+        "table" : "Devices" 
+    },
+    "API" : {
+        "address" : "localhost:9090"
+    } 
+}

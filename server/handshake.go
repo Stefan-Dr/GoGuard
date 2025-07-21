@@ -57,7 +57,7 @@ func (s *Server) HandleHandshake() gin.HandlerFunc {
 			return
 		}
 
-		session.ExpiresAt = time.Now().Add(5 * time.Second)
+		session.ExpiresAt = time.Now().Add(10 * time.Second)
 
 		s.mutex.Lock()
 		s.sessions[sessionIdString] = session

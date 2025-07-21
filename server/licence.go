@@ -69,7 +69,7 @@ func (s *Server) HandleLicence() gin.HandlerFunc {
 			}
 			if device.Uid.String != uid {
 				log.Println("[ERROR] [" + ip + "]  hwid : " + hwid)
-				context.JSON(http.StatusInternalServerError, gin.H{"error": "access denied"})
+				context.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 			}
 			licence, err := base64.StdEncoding.DecodeString(strings.TrimSpace(device.LicenceKey.String))
 			if err != nil {

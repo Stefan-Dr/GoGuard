@@ -25,7 +25,7 @@ func (s *Server) HandleAESKey() gin.HandlerFunc {
 		s.mutex.RUnlock()
 
 		if !sessionExists || expiredSession {
-			log.Println("[ERROR] [" + ip + "] No session id in header")
+			log.Println("[ERROR] [" + ip + "] invalid or expired session")
 			context.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired session"})
 			if expiredSession {
 				s.mutex.Lock()
@@ -37,7 +37,7 @@ func (s *Server) HandleAESKey() gin.HandlerFunc {
 
 		if session.ClientPublicKey == nil {
 			log.Println("[ERROR] [" + ip + "] Missing public key")
-			context.JSON(http.StatusBadRequest, gin.H{"Error": "missing public keyt"})
+			context.JSON(http.StatusBadRequest, gin.H{"Error": "missing public key"})
 			return
 		}
 
