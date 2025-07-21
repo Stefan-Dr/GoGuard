@@ -53,7 +53,7 @@ func (s *Server) HandleDigitalSignature() gin.HandlerFunc {
 			return
 		}
 
-		serverResponse, err := crypto.SendSignature(session.MyPrivateKey)
+		serverResponse, err := crypto.MakeSignature(session.MyPrivateKey)
 		if err != nil {
 			log.Println("[ERROR] [" + ip + "] " + err.Error())
 			context.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})

@@ -54,6 +54,9 @@ func MakePublicKeyPEM(pvtKey *rsa.PrivateKey) ([]byte, error) {
 }
 
 func VerifySignature(clientMessage models.DigitalSignatureMessage, pubKey *rsa.PublicKey) error {
+	if pubKey == nil {
+		return errors.New("can't verify a signature with nil as publicKey")
+	}
 	payload := []byte(clientMessage.Payload)
 	hash := sha256.Sum256(payload)
 	var signatureBytes []byte
@@ -69,7 +72,10 @@ func VerifySignature(clientMessage models.DigitalSignatureMessage, pubKey *rsa.P
 	return err
 }
 
-func SendSignature(privKey *rsa.PrivateKey) (*models.DigitalSignatureMessage, error) {
+func MakeSignature(privKey *rsa.PrivateKey) (*models.DigitalSignatureMessage, error) {
+	if privKey == nil {
+		return nil, errors.New("can't make a signature with nil as private key")
+	}
 	payload := []byte("hello, world")
 
 	hash := sha256.Sum256(payload)
