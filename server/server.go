@@ -40,6 +40,8 @@ func NewServer(database *sql.DB, key string) *Server {
 		sessions:  make(map[string]*Session),
 	}
 
+	s.router.Use(RateLimiterMiddleware())
+
 	return s
 }
 
