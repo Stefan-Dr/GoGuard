@@ -43,6 +43,7 @@ The server validates each HWID independently and returns the corresponding encry
 
 - Go (Golang)  
 - Gin HTTP Framework  
+- `golang.org/x/time/rate` for rate limiting middleware
 - RSA / AES-256-GCM Cryptography  
 - SQL Server for device and license storage  
 
@@ -82,7 +83,8 @@ GoGuard/
 │   ├── config.go  
 │   ├── digital_signature.go  
 │   ├── handshake.go  
-│   ├── licence.go  
+│   ├── licence.go
+│   ├── rate_limiter.go  
 │   └── server.go  
 │ 
 ├── config.json           # API and Database configurations  
