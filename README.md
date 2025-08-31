@@ -98,7 +98,16 @@ GoGuard/
 
 Before running the project, ensure that your SQL Server database is properly configured and that the specified table exists.
 
+ If you are not familiar with SQL Server setup or run into issues, refer to the  [**Sql Server Setup**](https://github.com/Stefan-Dr/GoGuard/wiki/GoGuard#sql-server-setup).
+
 Refer to the [**Database Schema**](https://github.com/Stefan-Dr/GoGuard/wiki/GoGuard#database-schema) for expected schema details.
+
+> ⚠️ Note: The provided SQL script was generated using SQL Server 2019 (MSSQL15).  
+> If you are using a different version (e.g., SQL Server 2022 / MSSQL16), update any file paths in the script accordingly:
+> 
+> `C:\Program Files\Microsoft SQL Server\MSSQL15.SQLEXPRESS\MSSQL\DATA\` →  
+> `C:\Program Files\Microsoft SQL Server\MSSQL16.SQLEXPRESS\MSSQL\DATA\`
+
 
 You must also provide a valid `config.json` file at the project root
 
@@ -132,7 +141,7 @@ A client program wants to verify if the device it is running on is valid and aut
 2. It performs digital signature verification to mutually confirm the identities.
 3. The client then requests the AES key, which the server provides encrypted with the client’s RSA public key.
 4. Using the AES key, the client sends its hardware ID (HWID) encrypted and requests a license.
-5. The server returns the license encrypted with AES if a valid license exists for that HWID.
+5. If a license exists, it returns the existing license encrypted with AES and if no license exists but the HWID is present in the database, the server generates a new license for that HWID and returns it encrypted with AES.
 
 This process ensures the client device is authenticated and authorized to use the service securely.
 
